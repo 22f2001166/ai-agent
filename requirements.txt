@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+sqlalchemy
+requests
+pydantic
+langchain
+faiss-cpu
+PyMuPDF
+pandas

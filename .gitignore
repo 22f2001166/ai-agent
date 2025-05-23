@@ -1,0 +1,31 @@
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# OS and editor files
+.DS_Store
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment files
+.env
+*.local
+
+# Frontend (Vite + React)
+frontend/node_modules/
+frontend/dist/
+
+# Backend (Python in root)
+__pycache__/
+*.pyc
+env/
+*.db
