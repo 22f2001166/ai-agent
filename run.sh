@@ -1,4 +1,5 @@
 # Clone and install packages mentioned in requirements.txt
+# create .env for config.py variables
 
 # for backend (in one terminal)
 python -c "from vectorstore import build_vector_index; build_vector_index()"

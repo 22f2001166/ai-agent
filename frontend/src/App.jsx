@@ -37,6 +37,7 @@ function App() {
         <select value={role} onChange={(e) => setRole(e.target.value)}>
           <option value="Planner">Planner</option>
           <option value="Finance">Finance</option>
+          <option value="Finance">Manager</option>
         </select>
         <select value={region} onChange={(e) => setRegion(e.target.value)}>
           <option value="India">India</option>

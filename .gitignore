@@ -26,6 +26,7 @@ frontend/dist/
 
 # Backend (Python in root)
 __pycache__/
+vectorstore/
 *.pyc
 env/
 *.db
