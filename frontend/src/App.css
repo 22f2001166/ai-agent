@@ -32,10 +32,9 @@ body {
 
 /* Header */
 h1 {
-  font-size: 2.2rem;
-  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  margin-bottom: 2.5rem;
   color: #2a6be6;
-  text-align: center;
 }
 
 /* Textarea */
@@ -63,10 +62,9 @@ textarea:focus {
   flex-wrap: wrap;
   gap: 1rem;
   margin: 1.5rem 0;
-  justify-content: space-between;
 }
 
-select, button {
+select {
   padding: 0.6rem 1rem;
   font-size: 1rem;
   border-radius: 10px;
@@ -74,7 +72,15 @@ select, button {
   background: white;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-sizing: border-box;
+  appearance: none; /* Removes default OS dropdown styling */
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='gray' class='bi bi-caret-down-fill' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14l-4.796-5.481c-.566-.648-.106-1.659.753-1.659h9.592c.86 0 1.32 1.01.753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem; /* space for arrow */
 }
+
 
 select:focus, button:focus {
   outline: none;

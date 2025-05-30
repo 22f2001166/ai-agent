@@ -7,10 +7,3 @@ load_dotenv()
 API_KEY = os.getenv("API_KEY")
 API_URL = os.getenv("API_URL")
 DB_URI = os.getenv("DB_URI")
-
-# Simulated user metadata
-# USER_PROFILE = {
-#     "username": "alice",
-#     "role": "Planner",  # or 'Finance'
-#     "region": "India",
-# }

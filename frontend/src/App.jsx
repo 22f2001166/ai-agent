@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import axios from 'axios';
 import './App.css';
+import ReactMarkdown from 'react-markdown';
 
 function App() {
   const [userInput, setUserInput] = useState('');
-  const [role, setRole] = useState('Planner');
-  const [region, setRegion] = useState('India');
+  const [role, setRole] = useState('Finance');
+  const [region, setRegion] = useState('Global');
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -35,9 +36,9 @@ function App() {
       />
       <div className="controls">
         <select value={role} onChange={(e) => setRole(e.target.value)}>
-          <option value="Planner">Planner</option>
           <option value="Finance">Finance</option>
-          <option value="Finance">Manager</option>
+          <option value="Planner">Planner</option>
+          <option value="Manager">Manager</option>
         </select>
         <select value={region} onChange={(e) => setRegion(e.target.value)}>
           <option value="India">India</option>
@@ -51,7 +52,11 @@ function App() {
       {response && (
         <div className="response">
           <h2>Response</h2>
-          {response.type === 'doc' && <p>{response.answer}</p>}
+          {response.type === 'doc' && (
+            <div className="markdown">
+              <ReactMarkdown>{response.answer}</ReactMarkdown>
+            </div>
+          )}
           {response.type === 'data' && (
             <table>
               <thead>

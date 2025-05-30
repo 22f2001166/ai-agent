@@ -8,18 +8,41 @@ def handle_query(user_input, role, region):
     vs = load_vector_index()
     user_input_lower = user_input.lower()
 
+    import re
+
+    def format_answer(text):
+        lines = text.strip().splitlines()
+        formatted_lines = []
+
+        for line in lines:
+            # Format numbered steps
+            if re.match(r"^\d+\.\s", line):
+                formatted_lines.append(f"**{line}**")
+            # Format sub-bullets with dashes
+            elif re.match(r"^\s*-\s", line):
+                formatted_lines.append(f"{line}")
+            # Format section headers (optional heuristic)
+            elif ":" in line and not line.strip().startswith("-"):
+                parts = line.split(":", 1)
+                formatted_lines.append(f"**{parts[0].strip()}**:{parts[1]}")
+            else:
+                formatted_lines.append(line)
+
+        return "\n".join(formatted_lines)
+
     def handle_doc_query():
         docs = vs.similarity_search(user_input)
         context = "\n\n".join([doc.page_content for doc in docs[:2]])
         prompt = f"Use the context below to answer the question:\n{context}\n\nQuestion: {user_input}"
-        answer = query_llm(prompt)
-        return {"type": "doc", "answer": answer}
+        raw_answer = query_llm(prompt)
+        formatted_answer = format_answer(raw_answer)
+        return {"type": "doc", "answer": formatted_answer}
 
     try:
         # 1. Total sales (all / region-based)
         if "total sales" in user_input_lower or "sales amount" in user_input_lower:
-            if "southwest" in user_input_lower:
-                sql = "SELECT SUM(Sales) AS total_sales FROM inventory WHERE `Order Region` = 'Southwest'"
+            if "southeast" in user_input_lower:
+                sql = "SELECT SUM(Sales) AS total_sales FROM inventory WHERE `Order Region` = 'Southeast Asia'"
             else:
                 sql = "SELECT SUM(Sales) AS total_sales FROM inventory"
             sql = enforce_geo(sql, region)
@@ -67,27 +90,40 @@ def handle_query(user_input, role, region):
             return {"type": "data", "data": query_sql(sql)}
 
         # 5. Slow-moving / No-mover inventory
-        if "slow-moving" in user_input_lower or "no-mover" in user_input_lower:
-            search_terms = "inventory classification policy"
-            docs = vs.similarity_search(search_terms)
-            context = "\n\n".join([doc.page_content for doc in docs[:2]])
-            prompt = f"Based on the following context:\n{context}\n\n{user_input}"
-            definition = query_llm(prompt)
-            if "180 days" in definition:
-                sql = "SELECT * FROM inventory WHERE `Days for shipping (real)` >= 180"
-            else:
-                sql = "SELECT * FROM inventory WHERE `Days for shipping (real)` BETWEEN 90 AND 179"
+        if "no-mover" in user_input_lower and "total value" in user_input_lower:
+            sql = """
+                SELECT
+                    SUM(`Order Item Product Price` * `Order Item Quantity`) AS total_value_no_mover
+                FROM inventory
+                WHERE julianday('now') - julianday(`order date (DateOrders)`) > 365
+            """
             sql = enforce_geo(sql, region)
             sql = enforce_rbac(sql, role)
-            return {"type": "hybrid", "definition": definition, "data": query_sql(sql)}
+            return {"type": "data", "data": query_sql(sql)}
 
         # 6. Average time between order and shipping date by country
         if "average time" in user_input_lower and "shipping date" in user_input_lower:
             sql = """
-                SELECT `Order Country`,
-                       AVG(julianday(`shipping date (DateOrders)`) - julianday(`order date (DateOrders)`)) AS avg_days
+                SELECT 
+                `Order Country`,
+                AVG(
+                    julianday(
+                    substr(`shipping date (DateOrders)`, instr(`shipping date (DateOrders)`, '/') + 4, 4) || '-' ||
+                    printf('%02d', CAST(substr(`shipping date (DateOrders)`, 1, instr(`shipping date (DateOrders)`, '/') - 1) AS INTEGER)) || '-' ||
+                    printf('%02d', CAST(substr(`shipping date (DateOrders)`, instr(`shipping date (DateOrders)`, '/') + 1, instr(substr(`shipping date (DateOrders)`, instr(`shipping date (DateOrders)`, '/') + 1), '/') - 1) AS INTEGER)) || ' ' ||
+                    substr(`shipping date (DateOrders)`, instr(`shipping date (DateOrders)`, ' ') + 1) ||
+                    printf(':%02d', 0)
+                    ) - 
+                    julianday(
+                    substr(`order date (DateOrders)`, instr(`order date (DateOrders)`, '/') + 4, 4) || '-' ||
+                    printf('%02d', CAST(substr(`order date (DateOrders)`, 1, instr(`order date (DateOrders)`, '/') - 1) AS INTEGER)) || '-' ||
+                    printf('%02d', CAST(substr(`order date (DateOrders)`, instr(`order date (DateOrders)`, '/') + 1, instr(substr(`order date (DateOrders)`, instr(`order date (DateOrders)`, '/') + 1), '/') - 1) AS INTEGER)) || ' ' ||
+                    substr(`order date (DateOrders)`, instr(`order date (DateOrders)`, ' ') + 1) ||
+                    printf(':%02d', 0)
+                    )
+                ) AS avg_days
                 FROM inventory
-                GROUP BY `Order Country`
+                GROUP BY `Order Country`;
             """
             sql = enforce_geo(sql, region)
             sql = enforce_rbac(sql, role)
@@ -96,11 +132,15 @@ def handle_query(user_input, role, region):
         # 7. Declining sales in past 3 quarters (simplified)
         if "declining sales" in user_input_lower:
             sql = """
-                SELECT `Product Category`, SUM(Sales) AS total_sales, strftime('%Y-Q%m', `order date (DateOrders)`) AS quarter
+                SELECT 
+                    `Category Name`, 
+                    SUM(Sales) AS total_sales,
+                    strftime('%Y', `order date (DateOrders)`) || '-Q' || 
+                    (CAST((CAST(strftime('%m', `order date (DateOrders)`) AS INTEGER) - 1) / 3 AS INTEGER) + 1) AS quarter
                 FROM inventory
-                GROUP BY `Product Category`, quarter
-                ORDER BY `Product Category`, quarter
-            """
+                GROUP BY `Category Name`, quarter
+                ORDER BY `Category Name`, quarter;
+                """
             sql = enforce_geo(sql, region)
             sql = enforce_rbac(sql, role)
             return {"type": "data", "data": query_sql(sql)}
