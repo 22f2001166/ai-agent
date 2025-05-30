@@ -27,7 +27,7 @@ It combines document embeddings, SQL database queries, role-based and geographic
 
 - **PDF Parsing**: PyMuPDF (fitz)
 
-### Sample Questions to ask
+## Sample Questions to ask
 
 - What is the total sales amount for all orders?
 - What is our company's definition of slow-moving inventory according to the Inventory Management policy?
