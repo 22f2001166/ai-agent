@@ -50,3 +50,9 @@ It combines document embeddings, SQL database queries, role-based and geographic
 - Which product categories have shown declining sales over the past three quarters?
 - What was the total sales amount for the Southeast region?
 - What is the average time between order date and shipping date by country?
+
+---
+
+![ASCA1](ASCA1.png)
+
+![ASCA2](ASCA2.png)
